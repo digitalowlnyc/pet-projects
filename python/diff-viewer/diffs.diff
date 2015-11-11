@@ -1,0 +1,150 @@
+1,2d0
+< #!/bin/python
+< 
+7,8d4
+< import subprocess
+< import time
+13c9
+<     return line + "\n"
+---
+>     return line
+15c11
+< def parseDiffText(diffText):
+---
+> def parseDiff(diffFile):
+17,20d12
+< #
+<     lineArray = diffText.split("\n");
+< #    for line in diffText.split("\r"):
+<  #       lineArray.append(line)
+22c14,20
+<     print("Parsed diff to line array of size ", len(lineArray))
+---
+> 
+>     print "Using file " + diffFile
+> 
+>     lineArray = [];
+>     with open (diffFile, "r") as myfile:
+>         for line in myfile:
+>             lineArray.append(line)
+30d27
+<     linesTotal = len(lineArray)
+34,40c31,33
+< 
+<         isFilenameLine = re.search(filenameParseRegex, line)
+<         isLastLineInFile = lineCount == linesTotal
+<         if(isFilenameLine):
+<             print line
+<             
+<             filenames = isFilenameLine.group(1)
+---
+>         if("diff" in line):
+>             m = re.search(filenameParseRegex, line)
+>             filenames = m.group(1)
+56,61d48
+<         # The "Save lines" code above will not trigger in the case
+<         # that we are at the end of file. Explicitly save.
+<         if(isLastLineInFile):
+<             diffFileData[currentFilename] = currentLinesString
+< 
+< 
+64,68c51,52
+< def parseDiff(diffFile):
+<     print "Using file " + diffFile
+<     with diffText as myfile:
+<         file = open (myfile, "r")
+<     parseDiffText(file)
+---
+> diffFile = sys.argv[1]
+> parsedDiff = parseDiff(diffFile)
+72,74c56
+<     parsedDiff = None
+<     diffFilename = None
+<     currentFilename = None
+---
+>     diffData = {}
+78,79d59
+<     lb = None
+< 
+82,83d61
+<     def __init__(self, diffFilename):
+<         self.diffFilename = diffFilename
+84a63,65
+>     def __init__(self, diffData):
+>         self.diffData = diffData
+>         self.listOptions = diffData.keys()
+86,89d66
+<         print "Loading diff tool"
+< 
+<         self.loadData()
+< 
+92a70,72
+>         for option in self.listOptions:
+>            lb.insert("end", option)
+> 
+97,107d76
+<         def reloadCallback():
+<             numOptions = len(self.listOptions)
+<             self.lb.delete(0, last = numOptions)
+<             print "Reloading"
+<             self.loadData()
+<             self.loadGui()
+<             self.loadFileIntoTextbox() # Reload the currently displayed file
+< 
+<         b = tk.Button(self.root, text="Reload", command=reloadCallback)
+<         b.pack()
+< 
+114d82
+<         self.lb = lb
+117,137c85,89
+<         self.loadGui()
+< 
+<     def doDiff(self):
+<         out = subprocess.check_output(["git", "diff"])
+<         print "Output type: ", type(out)
+<         print out
+<         return out
+< 
+<     def loadGui(self):
+<         self.listOptions = self.parsedDiff.keys()
+<         for option in self.listOptions:
+<            self.lb.insert("end", option)
+< 
+<     def loadData(self):
+<         print "Parsing diffs from " + self.diffFilename
+<         diffText = self.doDiff()
+<         self.parsedDiff = parseDiffText(diffText)
+< 
+<     def getDiffContentsForFile(self):
+<         print "Getting contents for " + self.currentFilename
+<         return self.parsedDiff[self.currentFilename]
+---
+>     def OnDouble(self, event):
+>         widget = event.widget
+>         selection=widget.curselection()
+>         value = widget.get(selection[0])
+>         print "selection:", selection, ": '%s'" % value
+139,140c91
+<     def loadFileIntoTextbox(self):
+<         textContent = self.getDiffContentsForFile()
+---
+>         textContent = self.diffData[value]
+155,165d105
+<     def OnDouble(self, event):
+<         widget = event.widget
+<         selection=widget.curselection()
+<         value = widget.get(selection[0])
+<         print "selection:", selection, ": '%s'" % value
+< 
+<         self.currentFilename = value
+<         self.loadFileIntoTextbox();
+< 
+< 
+< diffFile = sys.argv[1]
+168,169c108,109
+<     app = ThreesDiff(diffFile)
+<     app.root.mainloop()
+\ No newline at end of file
+---
+>     app = ThreesDiff(parsedDiff)
+>     app.root.mainloop()
